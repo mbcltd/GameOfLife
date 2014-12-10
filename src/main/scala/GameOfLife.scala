@@ -11,36 +11,60 @@
 //   4. Any dead cell with exactly three live neighbours becomes a live cell.
 // You should write a program that can accept an arbitrary grid of cells, and will output a similar grid showing the next generation.
 //
-class GameOfLife(grid: List[List[Char]]) {
-  val live: Char = '*'
 
-  val dead: Char = '.'
 
-  def nextGeneration: List[List[Char]] = {
-    val indexedGrid = grid.map(_.zipWithIndex).zipWithIndex
-    indexedGrid.map {
-      case (row, rowIndex) => row.map {
-        case (cell, columnIndex) => next(cell, rowIndex, columnIndex)
-      }
-    }
+object GameOfLife extends App {
+  val input = ".........\n"+
+    "..*......\n"+
+    ".***.....\n"+
+    "..*......\n"+
+    ".........\n"
+
+  val grid = Grid(input)
+
+  println(grid)
+  println()
+  println(grid.next)
+
+}
+
+object Grid {
+  def apply(s:String):Grid = {
+    val rows = s.split('\n')
+    val widestRow = rows.map( _.length ).max
+
+    val liveLocations = for {
+      row <- rows.zipWithIndex
+      cells <- row._1.toCharArray.zipWithIndex
+      if cells._1 == '*'
+    } yield Location(cells._2, row._2)
+
+    Grid( liveLocations, widestRow, rows.size )
+  }
+}
+
+case class Grid(liveLocations:Array[Location], width:Int, height:Int) {
+  def isLive(l:Location) = liveLocations.contains(l)
+  def liveCount(l:Location) = if (isLive(l)) 1 else 0
+  def neighbourCount(l:Location):Int = l.neighbours.map( liveCount ).sum
+  override def toString = (0 to height).map( rowToString ).mkString("\n")
+  def rowToString(y:Int):String = (0 to width).map( x => if ( isLive(Location(x,y)) ) '*' else '.' ).mkString
+
+  def nextGenerationAlive(l:Location) = if (isLive(l)) neighbourCount(l) > 1 && neighbourCount(l) < 4 else neighbourCount(l) == 3
+
+  def next = {
+    val nextLiveLocations = for {
+      x <- 0 to width
+      y <- 0 to height
+      if nextGenerationAlive(Location(x,y))
+    } yield Location(x,y)
+
+    Grid(nextLiveLocations.toArray,width,height)
   }
 
-  private def next(cell: Char, x: Int, y: Int): Char = {
-    liveNeighboursOf(x, y) match {
-      case n if n > 3 || n < 2 => dead
-      case 3 => live
-      case _ => cell
-    }
-  }
+}
 
-  private def liveNeighboursOf(x: Int, y: Int) = {
-    val neighbours = for {
-      i <- -1 to 1
-      j <- -1 to 1 if !(i == 0 && j == 0)
-    } yield neighbourExists(x + i)(y + j)
-    neighbours.flatten.count(_ == live)
-  }
-
-  private def neighbourExists(x: Int)(y: Int) = if (grid.isDefinedAt(x) && grid(x).isDefinedAt(y)) Some(grid(x)(y)) else None
-
+case class Location(x:Int,y:Int) {
+  def neighbourCells = for { i <- -1 to 1; j <- -1 to 1; if !(i == 0 && j == 0) } yield (i,j)
+  def neighbours = neighbourCells.map( o => Location(x+o._1,y+o._2) )
 }
