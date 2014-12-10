@@ -21,10 +21,7 @@ object GameOfLife extends App {
     "..*......\n"+
     ".........\n"
 
-  val grid = Grid(input)
-
-
-  val grids = grid.next(3)
+  val grids = Grid(input).next(3)
 
   grids.foreach(println)
 
