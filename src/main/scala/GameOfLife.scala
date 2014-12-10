@@ -51,8 +51,6 @@ case class Grid(liveLocations:Array[Location], width:Int, height:Int) {
 
   def neighbourCount(l:Location):Int = l.neighbours.map( liveCount ).sum
 
-  def rowToString(y:Int):String = (0 to width).map( x => if ( isLive(Location(x,y)) ) '*' else '.' ).mkString
-
   def nextGenerationAlive(l:Location) = if (isLive(l)) neighbourCount(l) > 1 && neighbourCount(l) < 4 else neighbourCount(l) == 3
 
   def nextLiveLocations = for {
@@ -66,6 +64,8 @@ case class Grid(liveLocations:Array[Location], width:Int, height:Int) {
   def next(count:Int):List[Grid] = if (count == 0) Nil else this.next :: this.next.next( count -1 )
 
   override def toString = (0 to height).map( rowToString ).mkString("\n")
+
+  def rowToString(y:Int):String = (0 to width).map( x => if ( isLive(Location(x,y)) ) '*' else '.' ).mkString
 }
 
 case class Location(x:Int,y:Int) {
