@@ -14,7 +14,8 @@
 
 
 object GameOfLife extends App {
-  val input = ".........\n"+
+  val input =
+    ".........\n"+
     "..*......\n"+
     ".***.....\n"+
     "..*......\n"+
@@ -22,13 +23,16 @@ object GameOfLife extends App {
 
   val grid = Grid(input)
 
-  println(grid)
-  println()
-  println(grid.next)
+
+  val grids = grid.next(3)
+
+  grids.foreach(println)
+
 
 }
 
 object Grid {
+  // Parse a string into a Grid
   def apply(s:String):Grid = {
     val rows = s.split('\n')
     val widestRow = rows.map( _.length ).max
@@ -45,23 +49,26 @@ object Grid {
 
 case class Grid(liveLocations:Array[Location], width:Int, height:Int) {
   def isLive(l:Location) = liveLocations.contains(l)
+
   def liveCount(l:Location) = if (isLive(l)) 1 else 0
+
   def neighbourCount(l:Location):Int = l.neighbours.map( liveCount ).sum
-  override def toString = (0 to height).map( rowToString ).mkString("\n")
+
   def rowToString(y:Int):String = (0 to width).map( x => if ( isLive(Location(x,y)) ) '*' else '.' ).mkString
 
   def nextGenerationAlive(l:Location) = if (isLive(l)) neighbourCount(l) > 1 && neighbourCount(l) < 4 else neighbourCount(l) == 3
 
-  def next = {
-    val nextLiveLocations = for {
-      x <- 0 to width
-      y <- 0 to height
-      if nextGenerationAlive(Location(x,y))
-    } yield Location(x,y)
+  def nextLiveLocations = for {
+    x <- 0 to width
+    y <- 0 to height
+    if nextGenerationAlive(Location(x,y))
+  } yield Location(x,y)
 
-    Grid(nextLiveLocations.toArray,width,height)
-  }
+  def next = Grid(nextLiveLocations.toArray,width,height)
 
+  def next(count:Int):List[Grid] = if (count == 0) Nil else this.next :: this.next.next( count -1 )
+
+  override def toString = (0 to height).map( rowToString ).mkString("\n")
 }
 
 case class Location(x:Int,y:Int) {
